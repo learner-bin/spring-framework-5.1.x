@@ -516,40 +516,56 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
 			// Prepare this context for refreshing.
+			// 准备上下文刷新环境：比如startDate，active标志，closed标志，log级别，Environment，Event，Listeners
+			// 预处理
 			prepareRefresh();
 
 			// Tell the subclass to refresh the internal bean factory.
+			// 刷新子类内部的BeanFactory/获取BeanFactory
+			// 1.1如果存在则销毁Bean和colse掉，
+			// 1.2创建BeanFactory，如果parent的类型是ConfigurableApplicationContext直接返回，否则获取ApplicationContext
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
+			// 准备BeanFactory环境：ClassLoader、ExpressionResolver、Register、BeanPostProcessor（ApplicationListeners）、MessageSource等
+			// 预处理
 			prepareBeanFactory(beanFactory);
 
 			try {
 				// Allows post-processing of the bean factory in context subclasses.
+				// 子类可以对该BeanFactory后置处理
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
+				// 调用上下文注册为Bean的工厂处理器：实现BeanFactoryPostProcessor
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
+				// 注册BeanPostProcessors，拦截Bean的创建
 				registerBeanPostProcessors(beanFactory);
 
 				// Initialize message source for this context.
+				// 初始化上下文消息源
 				initMessageSource();
 
 				// Initialize event multicaster for this context.
+				//初始化上下文消息/事件广播
 				initApplicationEventMulticaster();
 
 				// Initialize other special beans in specific context subclasses.
+				// 初始化子类上下文中其他特殊的Bean
 				onRefresh();
 
 				// Check for listener beans and register them.
+				// 注册监听器
 				registerListeners();
 
 				// Instantiate all remaining (non-lazy-init) singletons.
+				// 初始化其余的Bean
 				finishBeanFactoryInitialization(beanFactory);
 
 				// Last step: publish corresponding event.
+				// 完成刷新，清除缓存、发布事件等
 				finishRefresh();
 			}
 
@@ -634,7 +650,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @see #getBeanFactory()
 	 */
 	protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
+		// 刷新子类内部的BeanFactory
 		refreshBeanFactory();
+		//
 		return getBeanFactory();
 	}
 
