@@ -128,8 +128,9 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 			// 创建Bean工厂，如果parent是ConfigurableApplicationContext返回，否则返回ApplicationContext
 			DefaultListableBeanFactory beanFactory = createBeanFactory();
 			beanFactory.setSerializationId(getId());
-			// 设置该上下文Bean工厂
+			// 设置该上下文Bean工厂记载同名Bean的处理方式
 			customizeBeanFactory(beanFactory);
+			// 加载Bean的描述，模版方法，子类自己实现加载方式
 			loadBeanDefinitions(beanFactory);
 			this.beanFactory = beanFactory;
 		}

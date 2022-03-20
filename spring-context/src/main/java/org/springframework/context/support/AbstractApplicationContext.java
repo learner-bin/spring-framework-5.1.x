@@ -516,56 +516,61 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
 			// Prepare this context for refreshing.
-			// 准备上下文刷新环境：比如startDate，active标志，closed标志，log级别，Environment，Event，Listeners
-			// 预处理
+			// TODO: 预处理，准备上下文刷新环境（ApplicationContext）：比如startDate，active标志，closed标志，log级别，Environment，Event，Listeners
 			prepareRefresh();
 
 			// Tell the subclass to refresh the internal bean factory.
-			// 刷新子类内部的BeanFactory/获取BeanFactory
-			// 1.1如果存在则销毁Bean和colse掉，
+			// TODO: 刷新子类内部的BeanFactory/获取BeanFactory/生成并且加载BeadDefinition
+			// 1.1如果存在则销毁Bean和close掉，
 			// 1.2创建BeanFactory，如果parent的类型是ConfigurableApplicationContext直接返回，否则获取ApplicationContext
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
-			// 准备BeanFactory环境：ClassLoader、ExpressionResolver、Register、BeanPostProcessor（ApplicationListeners）、MessageSource等
-			// 预处理
+			// TODO: 预处理，准备/完善BeanFactory，将成员变成实例化
+			// 使用的ClassLoader、ExpressionResolver、Register、内置BeanPostProcessor（ApplicationListeners）、MessageSource等
 			prepareBeanFactory(beanFactory);
-
+			// TODO: 都是从beanDefinitionMap中查找
+			// TODO: 对象创建的三个阶段：创建、依赖注入、初始化，每一个阶段都有不同bean的后置处理器参与、扩展功能
 			try {
-				// Allows post-processing of the bean factory in context subclasses.
-				// 子类可以对该BeanFactory后置处理
+				//  Allows post-processing of the bean factory in context subclasses.
+				// TODO: 空实现，模版方法的设计模式，定义架构，由子类添加扩展后置处理器
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
-				// 调用上下文注册为Bean的工厂处理器：实现BeanFactoryPostProcessor
+				// TODO: 调用上下文注册为Bean的工厂处理器：实现BeanFactoryPostProcessor，目的是增加一些BeanDefinition
+				// 比如：ConfigurationClassPostProcessor，用来解析@Configuration，@Import，@PropertySource等注解，
+				// 这里执行了后置处理器，可能会造成在finishBeanFactoryInitialization方法中的依赖注入（@Value、@Autowired）会失败
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
-				// 注册BeanPostProcessors，拦截Bean的创建
+				// TODO: 注册BeanPostProcessors，拦截Bean的创建进行扩展，将beanDefinitionMap中的实现BeanPostProcessor，添加到beanPostProcessors中
+				// 比如：解析@Autowired的注解，解析@Resource注解的后置处理器
+				// 比如：切点的代理等
 				registerBeanPostProcessors(beanFactory);
 
 				// Initialize message source for this context.
-				// 初始化上下文消息源
+				// TODO: 初始化上下文消息源
 				initMessageSource();
 
 				// Initialize event multicaster for this context.
-				//初始化上下文消息/事件广播
+				// TODO: 初始化上下文消息/事件广播器
 				initApplicationEventMulticaster();
 
 				// Initialize other special beans in specific context subclasses.
-				// 初始化子类上下文中其他特殊的Bean
+				// TODO: 初始化子类上下文中其他特殊的Bean，
+				// 比如：SpringMVC中的实现，SpringBoot中的实现在这儿的实现中，准备WebServer(内嵌的Web容器)
 				onRefresh();
 
 				// Check for listener beans and register them.
-				// 注册监听器
+				// TODO: 注册监听器，用来接收事件，有的是编程加的，有的是@EventListener
 				registerListeners();
 
 				// Instantiate all remaining (non-lazy-init) singletons.
-				// 初始化其余的Bean
+				// TODO:创建所有非懒加载的单例类（并invoke BeanPostProcessors）
 				finishBeanFactoryInitialization(beanFactory);
 
 				// Last step: publish corresponding event.
-				// 完成刷新，清除缓存、发布事件等
+				// 完成刷新，生命周期管理、清除缓存、发布事件等
 				finishRefresh();
 			}
 
@@ -613,6 +618,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		}
 
 		// Initialize any placeholder property sources in the context environment.
+		// TODO: 空实现，子类自己实现加载配置文件的方式
 		initPropertySources();
 
 		// Validate that all properties marked as required are resolvable:
@@ -652,7 +658,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
 		// 刷新子类内部的BeanFactory
 		refreshBeanFactory();
-		//
+		// 获取具体的BeanFactor，在刷新是已经初始化完成
 		return getBeanFactory();
 	}
 
@@ -893,6 +899,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		beanFactory.freezeConfiguration();
 
 		// Instantiate all remaining (non-lazy-init) singletons.
+		// 初始化所有非懒加载的Bean
 		beanFactory.preInstantiateSingletons();
 	}
 

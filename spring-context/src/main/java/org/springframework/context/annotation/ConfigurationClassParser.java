@@ -220,6 +220,8 @@ class ConfigurationClassParser {
 			return;
 		}
 
+		// TODO: 判断同一个配置类是否重复加载过，如果重复加载过，则合并，否则从集合中移除旧的配置类，后续逻辑将处理新的配置类
+		// 	个人理解这里就是为什么@Componet注释的类会被@Configuration注解覆盖/合并
 		ConfigurationClass existingClass = this.configurationClasses.get(configClass);
 		if (existingClass != null) {
 			if (configClass.isImported()) {
