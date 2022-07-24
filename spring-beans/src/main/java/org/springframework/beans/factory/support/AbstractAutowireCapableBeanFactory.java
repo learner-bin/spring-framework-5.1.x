@@ -129,6 +129,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	private ParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
 
 	/** Whether to automatically try to resolve circular references between beans. */
+	// 自动解析循环
 	private boolean allowCircularReferences = true;
 
 	/**
@@ -503,7 +504,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		try {
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
-			// 是否有代理创建, AnnotationAwareAspectJAutoProxyCreator，也是在这里实现创建代理对象功能
+			// 是否配置了PostProcessor代理创建, AnnotationAwareAspectJAutoProxyCreator，也是在这里实现创建代理对象功能
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			if (bean != null) {
 				return bean;
@@ -551,10 +552,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			throws BeanCreationException {
 
 		// Instantiate the bean.
-		// BeanWrapper对象提供了设置和获取属性值的功能，相当于PropertyDescriptor
+		// BeanWrapper对象用来持有Bean的对象（与BeanDefinitionHolder类似），提供了设置和获取属性值的功能，相当于PropertyDescriptor
 		BeanWrapper instanceWrapper = null;
 		if (mbd.isSingleton()) {
-			// 移除未完成的FactoryBean，其实就是一个BeanWrapper
+			// 如果是单例的，移除未完成的同名的FactoryBean，其实就是一个BeanWrapper
 			instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
 		}
 		if (instanceWrapper == null) {
@@ -587,14 +588,14 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Eagerly cache singletons to be able to resolve circular references
 		// even when triggered by lifecycle interfaces like BeanFactoryAware.
-		// 是单例，并且有引用还在创建中，那就加入三级缓存
+		// 是单例，那就加入三级缓存
 		boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences && isSingletonCurrentlyInCreation(beanName));
-		// 存储到三级缓存，以便解决循环依赖问题
-		if (earlySingletonExposure) {
+		if (earlySingletonExposure) { // 其实只有循环依赖情况才会有3级缓存
 			if (logger.isTraceEnabled()) {
 				logger.trace("Eagerly caching bean '" + beanName +
 						"' to allow for resolving potential circular references");
 			}
+			// 存储到三级缓存，以便可以提前暴露出来，以便解决循环依赖问题，getEarlyBeanReference返回代理对象
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 
@@ -621,8 +622,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 		}
 
-		// 单例并且还在创建中
+		// 单例并且还在创建中，这是已经完成了依赖注入和初始化
 		if (earlySingletonExposure) {
+			// 这个时候，对象实例已经在二级缓存中了。所以参数false可以理解为禁用三级缓存
+			// earlySingletonReference: 提前曝光的代理Bean
 			Object earlySingletonReference = getSingleton(beanName, false);
 			if (earlySingletonReference != null) {
 				if (exposedObject == bean) {
@@ -1455,7 +1458,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			checkDependencies(beanName, mbd, filteredPds, pvs);
 		}
 
-		// 精确匹配，也就是配置文件的property中的vlaue/ref
+		// 精确匹配，也就是配置文件的property中的value/ref
 		if (pvs != null) {
 			applyPropertyValues(beanName, mbd, bw, pvs);
 		}
@@ -1803,7 +1806,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// 初始化方法：按照顺序排列
 		// 实现BeanFactoryAware接口
 		// @PostConstruct
-		// InitializingBean
+		// InitializingBean：
+			// 有事务处理器通知器的配置：AbstractSingletonProxyFactoryBean.afterPropertiesSet
 		// 配置的init-method或者@Bean(initMethod)
 		try {
 			invokeInitMethods(beanName, wrappedBean, mbd);

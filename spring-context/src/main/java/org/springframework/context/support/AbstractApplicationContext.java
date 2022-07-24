@@ -516,7 +516,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
 			// Prepare this context for refreshing.
-			// TODO: 预处理，准备上下文刷新环境（ApplicationContext）：比如startDate，active标志，closed标志，log级别，Environment，Event，Listeners
+			// TODO: 预处理，准备上下文刷新环境（ApplicationContext）：
+			//  比如startDate，active标志，closed标志，log级别，Environment，Event，Listeners
 			prepareRefresh();
 
 			// Tell the subclass to refresh the internal bean factory.
@@ -537,13 +538,15 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
-				// TODO: 调用上下文注册为Bean的工厂处理器：实现BeanFactoryPostProcessor，目的是增加一些BeanDefinition
+				// TODO: 调用上下文BeanFactory的后置处理器，拦截Bean的实例化之前进行调用：
+				//  实现BeanFactoryPostProcessor，目的是增加一些BeanDefinition
 				// 比如：ConfigurationClassPostProcessor，用来解析@Configuration，@Import，@PropertySource等注解，
 				// 这里执行了后置处理器，可能会造成在finishBeanFactoryInitialization方法中的依赖注入（@Value、@Autowired）会失败
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
-				// TODO: 注册BeanPostProcessors，拦截Bean的创建进行扩展，将beanDefinitionMap中的实现BeanPostProcessor，添加到beanPostProcessors中
+				// TODO: 注册Bean的后置处理器，拦截Bean的实例化过程中进行调用：
+				//  将beanDefinitionMap中的实现BeanPostProcessor，添加到beanPostProcessors中
 				// 比如：解析@Autowired的注解，解析@Resource注解的后置处理器
 				// 比如：切点的代理等
 				registerBeanPostProcessors(beanFactory);
@@ -604,6 +607,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 */
 	protected void prepareRefresh() {
 		// Switch to active.
+		// 激活系统
 		this.startupDate = System.currentTimeMillis();
 		this.closed.set(false);
 		this.active.set(true);
@@ -618,7 +622,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		}
 
 		// Initialize any placeholder property sources in the context environment.
-		// TODO: 空实现，子类自己实现加载配置文件的方式
+		// TODO: 模版模式的空实现，子类自己实现加载配置文件的方式
 		initPropertySources();
 
 		// Validate that all properties marked as required are resolvable:

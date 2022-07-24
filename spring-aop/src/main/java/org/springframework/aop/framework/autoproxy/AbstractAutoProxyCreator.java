@@ -236,7 +236,9 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	@Override
 	public Object getEarlyBeanReference(Object bean, String beanName) {
 		Object cacheKey = getCacheKey(bean.getClass(), beanName);
+		// 早期的Ban的引用，也就是三级缓存，用来解决循环以来，这个方法的官方的第一句说明已经很明白了
 		this.earlyProxyReferences.put(cacheKey, bean);
+		// 如果需要代理则返回代理对象否则返回普通对象
 		return wrapIfNecessary(bean, beanName, cacheKey);
 	}
 

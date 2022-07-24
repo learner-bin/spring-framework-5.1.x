@@ -246,10 +246,11 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		Object bean;
 
 		// Eagerly check singleton cache for manually registered singletons.
-		// 1、2  从3级缓存中根据beanName查找对象
+		// 1、2  从缓存中根据beanName查找对象
 		Object sharedInstance = getSingleton(beanName);
 		if (sharedInstance != null && args == null) {
 			if (logger.isTraceEnabled()) {
+				// 该实例是否正在创建
 				if (isSingletonCurrentlyInCreation(beanName)) {
 					logger.trace("Returning eagerly cached instance of singleton bean '" + beanName +
 							"' that is not fully initialized yet - a consequence of a circular reference");
@@ -258,6 +259,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					logger.trace("Returning cached instance of singleton bean '" + beanName + "'");
 				}
 			}
+			// 无论在几级缓存内，该beanName的实例已经存在了：可能是普通对象也可能是代理对象
 			bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
 		} else {
 
@@ -268,7 +270,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				throw new BeanCurrentlyInCreationException(beanName);
 			}
 			// Check if bean definition exists in this factory.
-			// TODO: 第二阶段 - 从父容器中查找Bean
+			// TODO: 第二阶段 - 从父容器中查找Bean，存在父容器并且BeanDefinition不存在，
 			BeanFactory parentBeanFactory = getParentBeanFactory();
 			if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
 				// Not found -> check parent.
@@ -295,11 +297,13 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			}
 
 			try {
+				// 根据BeanName获取到BeanDefinition
 				RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
 				checkMergedBeanDefinition(mbd, beanName, args);
 
 				// Guarantee initialization of beans that the current bean depends on.
-				// TODO: 第三阶段 - DependsOn ：如果依赖了其他Bean，那么则先创建依赖的Bean
+				// TODO: 第三阶段 - DependsOn ：如果当前Bean依赖了其他Bean，那么则先创建依赖的Bean（getBean的递归调用）
+				//  直到取到一个没有任何依赖的Bean位置
 				String[] dependsOn = mbd.getDependsOn();
 				if (dependsOn != null) {
 					for (String dep : dependsOn) {
@@ -379,7 +383,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		}
 
 		// Check if required type matches the type of the actual bean instance.
-		// TODO: 第六阶段 - 类型转换：Bean的类型和需要的类型不一致时，进行转换操作
+		// TODO: 第六阶段 - 类型转换：Bean的类型和需要的类型不一致时，进行转换操作，如果没有问题就返回了新创建的Bean
+		//  这个Bean就是包含了所有依赖关系的Bean
 		if (requiredType != null && !requiredType.isInstance(bean)) {
 			try {
 				T convertedBean = getTypeConverter().convertIfNecessary(bean, requiredType);
@@ -1653,6 +1658,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			Object beanInstance, String name, String beanName, @Nullable RootBeanDefinition mbd) {
 
 		// Don't let calling code try to dereference the factory if the bean isn't a factory.
+		// getBean传入的name是否包含&，也就是说是否要获取FactoryBean本身
 		if (BeanFactoryUtils.isFactoryDereference(name)) {
 			if (beanInstance instanceof NullBean) {
 				return beanInstance;
@@ -1665,6 +1671,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		// Now we have the bean instance, which may be a normal bean or a FactoryBean.
 		// If it's a FactoryBean, we use it to create a bean instance, unless the
 		// caller actually wants a reference to the factory.
+		// 是一个工厂Bean，name中不包含&
 		if (!(beanInstance instanceof FactoryBean) || BeanFactoryUtils.isFactoryDereference(name)) {
 			return beanInstance;
 		}

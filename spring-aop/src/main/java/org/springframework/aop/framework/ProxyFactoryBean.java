@@ -247,6 +247,7 @@ public class ProxyFactoryBean extends ProxyCreatorSupport
 	@Override
 	@Nullable
 	public Object getObject() throws BeansException {
+		// 初始化通知器链：所有interceptor拦截器
 		initializeAdvisorChain();
 		if (isSingleton()) {
 			return getSingletonInstance();
@@ -432,6 +433,7 @@ public class ProxyFactoryBean extends ProxyCreatorSupport
 			}
 
 			// Globals can't be last unless we specified a targetSource using the property...
+			// 判断通知器是否合法，也就是最后一个不能为 *
 			if (this.interceptorNames[this.interceptorNames.length - 1].endsWith(GLOBAL_SUFFIX) &&
 					this.targetName == null && this.targetSource == EMPTY_TARGET_SOURCE) {
 				throw new AopConfigException("Target required after globals");
