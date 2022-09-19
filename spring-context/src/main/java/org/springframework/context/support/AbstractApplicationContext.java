@@ -541,7 +541,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// TODO: 调用上下文BeanFactory的后置处理器，拦截Bean的实例化之前进行调用：
 				//  实现BeanFactoryPostProcessor，目的是增加一些BeanDefinition
 				// 比如：ConfigurationClassPostProcessor，用来解析@Configuration，@Import，@PropertySource等注解，
-				// 这里执行了后置处理器，可能会造成在finishBeanFactoryInitialization方法中的依赖注入（@Value、@Autowired）会失败
+				//
+				// 这里执行了工厂的后置处理器，因为会重新定义或者修改BeanDefinition中掉属性
+				// 所以可能会造成在finishBeanFactoryInitialization方法中（非懒加载掉Bean）依赖注入（@Value、@Autowired）会失败
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
