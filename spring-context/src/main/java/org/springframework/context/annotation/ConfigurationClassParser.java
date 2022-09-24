@@ -218,6 +218,7 @@ class ConfigurationClassParser {
 
 
 	protected void processConfigurationClass(ConfigurationClass configClass) throws IOException {
+
 		if (this.conditionEvaluator.shouldSkip(configClass.getMetadata(), ConfigurationPhase.PARSE_CONFIGURATION)) {
 			return;
 		}
@@ -250,7 +251,7 @@ class ConfigurationClassParser {
 		}
 		while (sourceClass != null);
 
-		// 添加到map缓存中，代表已经处理完了
+		// 添加所有的配置类到map缓存中，代表已经处理完了
 		this.configurationClasses.put(configClass, configClass);
 	}
 

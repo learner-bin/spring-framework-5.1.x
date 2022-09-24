@@ -240,7 +240,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
      */
     public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
         List<BeanDefinitionHolder> configCandidates = new ArrayList<>();
-        // 获取所有注册的BeanDefinition
+        // 获取所有注册的BeanDefinition， 其中就有SpringBoot启动类:XXXApplication，通过primarySources添加到BeadDefinition中
         String[] candidateNames = registry.getBeanDefinitionNames();
 
         for (String beanName : candidateNames) {
@@ -251,14 +251,16 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
                     logger.debug("Bean definition has already been processed as a configuration class: " + beanDef);
                 }
             }
-            // 判断是否是配置类，即类上是否有注解@Configuration，@Component，@ComponentScan，
-            // @Import，@ImportResource，或方法上有@Bean注解
+            // 判断是否是配置类，即类上是否有注解@Configuration，@Component，@ComponentScan：Full
+            // @Import，@ImportResource，或方法上有@Bean注解：Lite
+            // 当项目启动时，自由定义的启动类一个Class符合条件
             else if (ConfigurationClassUtils.checkConfigurationClassCandidate(beanDef, this.metadataReaderFactory)) {
                 configCandidates.add(new BeanDefinitionHolder(beanDef, beanName));
             }
         }
 
         // Return immediately if no @Configuration classes were found
+        // 第一次执行方法时：只有一个启动类
         if (configCandidates.isEmpty()) {
             return;
         }

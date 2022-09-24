@@ -141,7 +141,9 @@ class ConfigurationClassBeanDefinitionReader {
 			loadBeanDefinitionsForBeanMethod(beanMethod);
 		}
 
+		// ImportSource注解修饰的类的方法
 		loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
+		// Import修饰的类的方法
 		loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
 	}
 
